@@ -1,2 +1,2 @@
 # CSU-Global
-School work
+Critical Thinking Assignment #7
