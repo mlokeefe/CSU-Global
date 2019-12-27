@@ -1,0 +1,64 @@
+STRING minority (A8).
+RECODE ethnic ('0'='N') ('1'='N') ('6'='N') (ELSE='Y') INTO minority.
+RECODE Hispanic ('X'='N').
+STRING OnCampus (A8).
+RECODE Res_hall ('BRH'='Y') ('CLBR'='Y') ('CRST'='Y') ('GRHN'='Y') ('WLKS'='Y') (ELSE='N') INTO 
+    OnCampus.
+RECODE PellEligible ('Y'='Y') (ELSE='N').
+RECODE AGE (Lowest thru 19=1) (20 thru Highest=0) INTO agegroup.
+RECODE region ('international'=1) (ELSE=0) INTO International.
+RECODE region ('Pueblo'=1) (ELSE=0) INTO Pueblo.
+RECODE region ('Colorado'=1) (ELSE=0) INTO Colorado.
+RECODE region ('US'=1) (ELSE=0) INTO US.
+COMPUTE HS_GPA=(HighSchoolGPA) / 100.
+RECODE HS_GPA (7.56=SYSMIS) (9.73=SYSMIS).
+RECODE Unmet_Packaged_Need (0=0) (1 thru 2500=1) (2501 thru 5000=2) (5001 thru 10000=3) (10001 thru 
+    Highest=4) INTO Unmet_Need.
+EXECUTE.
+
+FREQUENCIES VARIABLES=SEX minority Hispanic FirstGen Athlete region OnCampus stem_major1 PellEligible retain1yr agegroup
+  international pueblo colorado us unmet_need
+  /ORDER=ANALYSIS.
+
+CROSSTABS
+  /TABLES=SEX minority Hispanic FirstGen Athlete region OnCampus stem_major1 PellEligible retain1yr agegroup
+  international pueblo colorado us unmet_need BY Retain1yr
+  /FORMAT=AVALUE TABLES
+  /STATISTICS=CHISQ CORR 
+  /CELLS=COUNT ROW 
+  /COUNT ROUND CELL.
+
+FREQUENCIES VARIABLES= HS_GPA ACT_with_SAT_scores Total_Aid Total_Tuition_Fees COA EFC Original_Need 
+     Unmet_Packaged_Need Need_Based_Aid termGPA curatt curearn creditsnotearned
+  /FORMAT=NOTABLE
+  /STATISTICS=STDDEV MINIMUM MAXIMUM MEAN MEDIAN SKEWNESS SESKEW KURTOSIS SEKURT
+  /HISTOGRAM NORMAL
+  /ORDER=ANALYSIS.
+
+CORRELATIONS
+  /VARIABLES=Retain1yr HS_GPA ACT_with_SAT_scores Total_Aid Total_Tuition_Fees COA EFC Original_Need 
+     Unmet_Packaged_Need Need_Based_Aid termGPA curatt curearn creditsnotearned
+  /PRINT=TWOTAIL NOSIG
+  /MISSING=PAIRWISE.
+
+LOGISTIC REGRESSION VARIABLES Retain1yr
+  /METHOD=ENTER SEX minority Hispanic FirstGen Athlete OnCampus STEM_Major1 PellEligible 
+    HighSchoolGPA ACT_with_SAT_scores HS_GPA ACT_with_SAT_scores Total_Aid Total_Tuition_Fees COA EFC Original_Need 
+     Unmet_Packaged_Need Need_Based_Aid
+  /CONTRAST (SEX)=Indicator
+  /CONTRAST (Hispanic)=Indicator
+  /CONTRAST (FirstGen)=Indicator
+  /CONTRAST (Athlete)=Indicator
+  /CONTRAST (PellEligible)=Indicator
+  /CRITERIA=PIN(.05) POUT(.10) ITERATE(20) CUT(.5).
+
+LOGISTIC REGRESSION VARIABLES Retain1yr
+  /METHOD=ENTER SEX minority Hispanic FirstGen Athlete OnCampus STEM_Major1 PellEligible 
+    HighSchoolGPA ACT_with_SAT_scores HS_GPA ACT_with_SAT_scores Total_Aid Total_Tuition_Fees COA EFC Original_Need 
+     Unmet_Packaged_Need Need_Based_Aid termGPA curatt curearn creditsnotearned
+  /CONTRAST (SEX)=Indicator
+  /CONTRAST (Hispanic)=Indicator
+  /CONTRAST (FirstGen)=Indicator
+  /CONTRAST (Athlete)=Indicator
+  /CONTRAST (PellEligible)=Indicator
+  /CRITERIA=PIN(.05) POUT(.10) ITERATE(20) CUT(.5).
